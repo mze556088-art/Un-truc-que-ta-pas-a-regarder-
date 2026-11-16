@@ -1,0 +1,23 @@
+name: Build IPA
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Build
+        run: |
+          xcodebuild -project MusicApp.xcodeproj -scheme MusicApp \
+            -configuration Release -sdk iphoneos -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/MusicApp.app Payload/
+          zip -r MusicApp.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MusicApp-ipa
+          path: MusicApp.ipa
