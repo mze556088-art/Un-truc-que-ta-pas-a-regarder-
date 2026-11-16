@@ -1,0 +1,56 @@
+name: Aura
+options:
+  bundleIdPrefix: com.aura.personal
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Aura:
+    type: application
+    platform: iOS
+    sources: [Aura]
+    dependencies:
+      - target: AuraWidget
+    entitlements:
+      path: Aura/Aura.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.aura.personal]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aura.personal.player
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: Aura/Info.plist
+      properties:
+        CFBundleDisplayName: Aura
+        CFBundleDevelopmentRegion: fr
+        UILaunchScreen: {}
+        UIBackgroundModes: [audio]
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+  AuraWidget:
+    type: app-extension
+    platform: iOS
+    sources: [AuraWidget]
+    entitlements:
+      path: AuraWidget/AuraWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.aura.personal]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aura.personal.player.widget
+    info:
+      path: AuraWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Aura
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
