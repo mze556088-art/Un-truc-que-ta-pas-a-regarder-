@@ -1,56 +1,56 @@
-name: Build Aura IPA
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: macos-15
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Générer le projet puis compiler (sans signature)
-        run: |
-          set -o pipefail
-          echo "== Fichiers à la racine ==" | tee build.log
-          ls -la | tee -a build.log
-          test -f project.yml || { echo "error: project.yml introuvable à la racine" | tee -a build.log; exit 1; }
-          brew install xcodegen 2>&1 | tail -n 3 | tee -a build.log
-          xcodegen generate 2>&1 | tee -a build.log
-          test -d Aura.xcodeproj || { echo "error: Aura.xcodeproj n'a pas été généré" | tee -a build.log; exit 1; }
-          xcodebuild -project Aura.xcodeproj -scheme Aura \
-            -configuration Release -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            2>&1 | tee -a build.log
-
-      - name: Afficher les erreurs
-        if: failure()
-        run: |
-          echo '### Erreurs' >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          grep -E "error:|Error:|Spec validation" build.log | sed 's#/Users/runner/work/[^/]*/[^/]*/##' | sort -u | head -40 >> "$GITHUB_STEP_SUMMARY" || true
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Créer l'IPA
-        run: |
-          mkdir Payload
-          cp -R build/Build/Products/Release-iphoneos/Aura.app Payload/
-          zip -qry Aura.ipa Payload
-
-      - name: Publier l'IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: Aura-ipa
-          path: Aura.ipa
-
-      - name: Publier le journal de compilation
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
+name: Aura
+options:
+  bundleIdPrefix: com.aura.personal
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Aura:
+    type: application
+    platform: iOS
+    sources: [Aura]
+    dependencies:
+      - target: AuraWidget
+    entitlements:
+      path: Aura/Aura.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.aura.personal]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aura.personal.player
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: Aura/Info.plist
+      properties:
+        CFBundleDisplayName: Aura
+        CFBundleDevelopmentRegion: fr
+        UILaunchScreen: {}
+        UIBackgroundModes: [audio]
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+  AuraWidget:
+    type: app-extension
+    platform: iOS
+    sources: [AuraWidget]
+    entitlements:
+      path: AuraWidget/AuraWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.aura.personal]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aura.personal.player.widget
+    info:
+      path: AuraWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Aura
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
