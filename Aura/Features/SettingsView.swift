@@ -29,11 +29,13 @@ struct SettingsView: View {
                     NavigationLink("Stockage") { StorageView() }
                     NavigationLink("Statistiques d'écoute") { StatsView() }
                 }
-                Section("Sauvegarde") {
+                Section {
                     Button("Préparer l'export de la bibliothèque") { exportURL = try? library.exportBackup() }
                     if let url = exportURL { ShareLink(item: url) { Label("Partager la sauvegarde", systemImage: "square.and.arrow.up") } }
                     Button("Restaurer une sauvegarde") { showRestore = true }
                     if let info { Text(info).font(AuraFont.caption).foregroundStyle(AuraColor.textSecondary) }
+                } header: {
+                    Text("Sauvegarde")
                 } footer: {
                     Text("La sauvegarde contient playlists, métadonnées, notes et sources. Les fichiers audio se trouvent dans Fichiers › Sur mon iPhone › Aura › Musique.")
                 }
